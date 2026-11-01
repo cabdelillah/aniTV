@@ -2,6 +2,32 @@
 
 Anime streaming for **Android phones and tablets**, **Android TV** and **macOS**, from one Kotlin codebase.
 
+## Install
+
+Every push to the default branch publishes a [release](https://github.com/cabdelillah/aniTV/releases/latest). These links always point at the newest build:
+
+- **Android phone / tablet / TV:** https://github.com/cabdelillah/aniTV/releases/latest/download/aniTV.apk
+- **macOS (Apple Silicon):** https://github.com/cabdelillah/aniTV/releases/latest/download/aniTV.dmg
+
+**Phone:** open the APK link on the phone, allow installs from your browser when asked, then tap Install.
+
+**Android TV:** install the free **Downloader** app from the TV's Play Store, enter the APK link above, and install. Allow Downloader to install unknown apps when prompted.
+
+**Mac:** `brew install mpv`, open the DMG and drag aniTV to Applications. The app is not notarized, so on first launch go to System Settings → Privacy & Security → **Open Anyway**.
+
+### Release signing
+
+Android only installs an update over an existing copy when both are signed with the same key. Add these repository secrets (Settings → Secrets and variables → Actions) and CI signs every APK with your key:
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64` of your `.jks` keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore password |
+| `ANDROID_KEY_ALIAS` | key alias |
+| `ANDROID_KEY_PASSWORD` | key password |
+
+Without them, builds use a throwaway debug key and you need to uninstall before installing a newer build.
+
 ## Layout
 
 | Module | What it is |

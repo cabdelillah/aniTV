@@ -30,7 +30,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg)
             packageName = "aniTV"
-            packageVersion = "1.0.0"
+            packageVersion = providers.gradleProperty("appVersion").orNull ?: "1.0.0"
             description = "Anime streaming for Android, Android TV and macOS"
             modules("java.net.http", "jdk.unsupported")
 
