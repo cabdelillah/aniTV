@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Button
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.anitv.core.model.Anime
@@ -60,7 +61,7 @@ fun TvHomeScreen(model: HomeModel, onOpen: (Anime) -> Unit, onSearch: () -> Unit
                         Text("aniTV", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(24.dp))
                         Button(onClick = onSearch) {
-                            Icon(Icons.Default.Search, contentDescription = null)
+                            Icon(Icons.Default.Search, contentDescription = null, tint = LocalContentColor.current)
                             Text("Search", Modifier.padding(start = 8.dp))
                         }
                     }

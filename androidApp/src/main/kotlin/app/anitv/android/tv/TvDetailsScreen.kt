@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Button
 import androidx.tv.material3.Card
 import androidx.tv.material3.CardDefaults
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.anitv.core.model.Anime
@@ -88,7 +89,7 @@ fun TvDetailsScreen(model: DetailsModel, onPlay: (PlaybackRequest) -> Unit, onOp
                             enabled = target != null,
                             modifier = Modifier.focusRequester(playFocus),
                         ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = LocalContentColor.current)
                             val label = when {
                                 target == null -> "Play"
                                 progress?.episodeNumber == target.number && progress?.isFinished == false ->
