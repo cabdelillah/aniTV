@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -7,11 +8,19 @@ plugins {
 }
 
 val withAndroid = providers.gradleProperty("desktopOnly").orNull != "true"
-if (withAndroid) apply(plugin = "com.android.library")
+if (withAndroid) {
+    // Configured by name because the Android plugin is only on the classpath for Android builds.
+    apply(plugin = "com.android.kotlin.multiplatform.library")
+    val kotlinExtensions = (kotlin as ExtensionAware).extensions
+    (kotlinExtensions.findByName("android") ?: kotlinExtensions.getByName("androidLibrary")).withGroovyBuilder {
+        setProperty("namespace", "app.anitv.ui")
+        setProperty("compileSdk", libs.versions.android.compileSdk.get().toInt())
+        setProperty("minSdk", libs.versions.android.minSdk.get().toInt())
+    }
+}
 
 kotlin {
-    jvm("desktop") { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
-    if (withAndroid) androidTarget { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
+    jvm("desktop")
 
     sourceSets {
         commonMain.dependencies {
@@ -36,16 +45,6 @@ kotlin {
     }
 }
 
-if (withAndroid) {
-    extensions.getByName("android").withGroovyBuilder {
-        setProperty("namespace", "app.anitv.ui")
-        setProperty("compileSdk", libs.versions.android.compileSdk.get().toInt())
-        getProperty("defaultConfig").withGroovyBuilder {
-            setProperty("minSdk", libs.versions.android.minSdk.get().toInt())
-        }
-        getProperty("compileOptions").withGroovyBuilder {
-            setProperty("sourceCompatibility", JavaVersion.VERSION_17)
-            setProperty("targetCompatibility", JavaVersion.VERSION_17)
-        }
-    }
+tasks.withType<KotlinJvmCompile>().configureEach {
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
 }

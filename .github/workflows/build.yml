@@ -20,12 +20,6 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - name: Show available Android tooling versions
-        run: |
-          for a in com/android/tools/build/gradle com/android/kotlin/multiplatform/library/com.android.kotlin.multiplatform.library.gradle.plugin androidx/media3/media3-exoplayer androidx/tv/tv-material androidx/activity/activity-compose; do
-            echo "$a: $(curl -s https://dl.google.com/dl/android/maven2/$a/maven-metadata.xml | grep -o '<version>[^<]*' | sed 's/<version>//' | tail -8 | tr '\n' ' ')"
-          done
-          ls "$ANDROID_HOME/platforms" || true
       - name: Test core
         run: ./gradlew :core:desktopTest
       - name: Build APK
