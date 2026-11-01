@@ -16,7 +16,7 @@ interface PlayerController {
 /**
  * Plays [request] with the platform's best engine: Media3/ExoPlayer on Android and Android TV,
  * libmpv on macOS. Hands back a [PlayerController] once playback is set up (and null when it is
- * torn down), and calls [onEnded] when the video finishes.
+ * torn down), calls [onEnded] when the video finishes and [onError] when it cannot be played.
  */
 @Composable
 expect fun VideoPlayer(
@@ -24,6 +24,7 @@ expect fun VideoPlayer(
     modifier: Modifier = Modifier,
     onController: (PlayerController?) -> Unit,
     onEnded: () -> Unit,
+    onError: (String) -> Unit,
 )
 
 fun formatTime(ms: Long): String {

@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -52,12 +54,17 @@ fun TvPosterCard(
     modifier: Modifier = Modifier,
     width: Dp = 140.dp,
     progress: Float? = null,
+    requestFocus: Boolean = false,
     onFocused: () -> Unit = {},
 ) {
+    val focus = remember { FocusRequester() }
+    if (requestFocus) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     Column(modifier.width(width)) {
         Card(
             onClick = onClick,
-            modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f).onFocusChanged { if (it.isFocused) onFocused() },
+            modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f)
+                .focusRequester(focus)
+                .onFocusChanged { if (it.isFocused) onFocused() },
             shape = CardDefaults.shape(RoundedCornerShape(10.dp)),
             scale = CardDefaults.scale(focusedScale = 1.08f),
             border = focusBorder(),
@@ -91,7 +98,7 @@ fun TvRow(
     items: List<Anime>,
     onOpen: (Anime) -> Unit,
     onFocused: (Anime) -> Unit,
-    firstItemFocus: FocusRequester? = null,
+    focusFirstItem: Boolean = false,
     progress: (Anime) -> Float? = { null },
 ) {
     if (items.isEmpty()) return
@@ -112,7 +119,7 @@ fun TvRow(
                     onClick = { onOpen(anime) },
                     progress = progress(anime),
                     onFocused = { onFocused(anime) },
-                    modifier = if (index == 0 && firstItemFocus != null) Modifier.focusRequester(firstItemFocus) else Modifier,
+                    requestFocus = focusFirstItem && index == 0,
                 )
             }
         }

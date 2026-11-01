@@ -23,6 +23,7 @@ fun AniTvApp(core: AniTvCore, navigator: Navigator) {
     val models = remember { ScreenModels(appScope) }
     models.retain(navigator.screens.filterIsInstance<Screen.Details>().map { it.anime.id }.toSet())
 
+    ProvideImageLoader(core)
     AniTvTheme {
         when (val screen = navigator.current) {
             Screen.Home -> HomeScreen(

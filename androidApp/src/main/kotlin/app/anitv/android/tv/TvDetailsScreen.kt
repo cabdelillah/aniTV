@@ -58,7 +58,6 @@ fun TvDetailsScreen(model: DetailsModel, onPlay: (PlaybackRequest) -> Unit, onOp
     val anime = details.anime
     val playFocus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(anime) }
-    LaunchedEffect(Unit) { runCatching { playFocus.requestFocus() } }
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Backdrop(focused)
@@ -82,6 +81,7 @@ fun TvDetailsScreen(model: DetailsModel, onPlay: (PlaybackRequest) -> Unit, onOp
                     }
                     val list = (episodes as? Load.Ready)?.value.orEmpty()
                     val target = model.resumeTarget(list, progress)
+                    LaunchedEffect(Unit) { runCatching { playFocus.requestFocus() } }
                     Row(Modifier.padding(top = 24.dp), verticalAlignment = Alignment.CenterVertically) {
                         Button(
                             onClick = { target?.let { model.play(it, onPlay) } },

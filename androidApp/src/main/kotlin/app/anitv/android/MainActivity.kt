@@ -3,7 +3,9 @@ package app.anitv.android
 import android.app.UiModeManager
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -13,6 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import app.anitv.core.SelfTest
+import kotlinx.coroutines.launch
 import app.anitv.android.tv.TvApp
 import app.anitv.ui.AniTvApp
 import app.anitv.ui.Navigator
@@ -26,6 +31,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val core = (application as AniTvApplication).core
         val isTv = isTelevision()
+
+        // `adb shell am start -n app.anitv/app.anitv.android.MainActivity --ez selftest true`
+        if (intent.getBooleanExtra("selftest", false)) {
+            lifecycleScope.launch {
+                Log.i(SELFTEST_TAG, "device=${Build.MANUFACTURER} ${Build.MODEL} sdk=${Build.VERSION.SDK_INT} tv=$isTv")
+                SelfTest.run(core) { Log.i(SELFTEST_TAG, it) }
+            }
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -46,6 +59,10 @@ class MainActivity : ComponentActivity() {
             }
             if (isTv) TvApp(core, navigator) else AniTvApp(core, navigator)
         }
+    }
+
+    private companion object {
+        const val SELFTEST_TAG = "ANITV_SELFTEST"
     }
 
     private fun isTelevision(): Boolean {

@@ -13,6 +13,7 @@ import app.anitv.core.source.DemoSource
 import app.anitv.core.source.SourceRegistry
 import app.anitv.core.source.TitleMatcher
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -67,7 +68,7 @@ class AniTvCore(
     companion object {
         const val USER_AGENT = "aniTV/0.1 (+https://github.com/cabdelillah/aniTV)"
 
-        fun defaultHttpClient() = HttpClient {
+        fun defaultHttpClient() = createHttpClient {
             expectSuccess = false
             install(ContentNegotiation) {
                 json(Json { ignoreUnknownKeys = true; explicitNulls = false })
@@ -80,3 +81,9 @@ class AniTvCore(
         }
     }
 }
+
+/**
+ * Creates a client on the platform's engine (OkHttp on Android and desktop). The engine is named
+ * explicitly instead of discovered through ServiceLoader, which code shrinkers can break.
+ */
+internal expect fun createHttpClient(config: HttpClientConfig<*>.() -> Unit): HttpClient

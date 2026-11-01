@@ -4,7 +4,12 @@ import android.net.Uri
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
+import android.util.Log
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -17,6 +22,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -34,9 +40,11 @@ actual fun VideoPlayer(
     modifier: Modifier,
     onController: (PlayerController?) -> Unit,
     onEnded: () -> Unit,
+    onError: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val currentOnEnded by rememberUpdatedState(onEnded)
+    val currentOnError by rememberUpdatedState(onError)
 
     val player = remember(request) {
         val headers = request.stream.headers
@@ -70,6 +78,11 @@ actual fun VideoPlayer(
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_ENDED) currentOnEnded()
             }
+
+            override fun onPlayerError(error: PlaybackException) {
+                Log.e("ANITV_PLAYER", "Playback failed for ${request.stream.url}", error)
+                currentOnError("${error.errorCodeName}: ${error.cause?.message ?: error.message}")
+            }
         }
         player.addListener(listener)
 
@@ -89,6 +102,13 @@ actual fun VideoPlayer(
         }
     }
 
+    // Move focus into the PlayerView so a TV remote's D-pad drives its controls.
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(player) {
+        withFrameNanos { }
+        runCatching { focus.requestFocus() }
+    }
+
     AndroidView(
         factory = { ctx ->
             PlayerView(ctx).apply {
@@ -102,7 +122,7 @@ actual fun VideoPlayer(
             }
         },
         update = { it.player = player },
-        modifier = modifier,
+        modifier = modifier.focusRequester(focus),
     )
 }
 

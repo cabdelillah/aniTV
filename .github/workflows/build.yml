@@ -59,16 +59,113 @@ jobs:
         run: |
           ./gradlew :desktopApp:packageDmg -PdesktopOnly=true -PappVersion=$APP_VERSION
           cp desktopApp/build/compose/binaries/main/dmg/*.dmg aniTV.dmg
+      - name: List JDK modules the app needs
+        run: ./gradlew :desktopApp:suggestRuntimeModules -PdesktopOnly=true | grep -A3 -i "suggested"
       - uses: actions/upload-artifact@v5
         with:
           name: aniTV-macos
           path: aniTV.dmg
+      - name: Self-test the packaged app (network + real mpv playback)
+        run: |
+          brew install mpv
+          hdiutil attach aniTV.dmg -mountpoint /Volumes/aniTV -nobrowse
+          mkdir -p e2e
+          ANITV_SELFTEST=1 /Volumes/aniTV/aniTV.app/Contents/MacOS/aniTV 2>&1 | tee e2e/mac-selftest.txt
+          grep -q "SELFTEST RESULT OK" e2e/mac-selftest.txt
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-macos
+          path: e2e/
+
+  phone-e2e:
+    name: Phone emulator test
+    needs: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: aniTV-android
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: scripts/e2e-android.sh phone aniTV.apk e2e
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-phone
+          path: e2e/
+
+  tv-e2e:
+    name: Android TV emulator test
+    needs: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          name: aniTV-android
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: android-tv
+          arch: x86
+          profile: tv_1080p
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: scripts/e2e-android.sh tv aniTV.apk e2e
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: e2e-tv
+          path: e2e/
+
+  # Screenshots and logs from the device tests, published as a pre-release so they can be
+  # inspected without downloading workflow artifacts. Replaced on every default-branch build.
+  diagnostics:
+    name: Publish test diagnostics
+    needs: [phone-e2e, tv-e2e, macos]
+    if: always() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: e2e-*
+          merge-multiple: true
+          path: e2e
+      - name: Replace the ci-diagnostics pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la e2e
+          gh release delete ci-diagnostics --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create ci-diagnostics e2e/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --prerelease --title "CI diagnostics" \
+            --notes "Screenshots, self-test output and logs from the device tests of ${GITHUB_SHA::7}. Not an app release."
 
   # Every successful build of the default branch becomes the latest GitHub Release, so
   # https://github.com/<owner>/<repo>/releases/latest/download/aniTV.apk always points at it.
   release:
     name: Publish release
-    needs: [android, macos]
+    needs: [android, macos, phone-e2e]
     if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     permissions:

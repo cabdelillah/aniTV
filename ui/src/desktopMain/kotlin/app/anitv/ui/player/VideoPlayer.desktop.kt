@@ -66,6 +66,7 @@ actual fun VideoPlayer(
     modifier: Modifier,
     onController: (PlayerController?) -> Unit,
     onEnded: () -> Unit,
+    onError: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val currentOnEnded by rememberUpdatedState(onEnded)
@@ -82,14 +83,15 @@ actual fun VideoPlayer(
     }
 
     if (mpv == null) {
-        Box(modifier.background(Color.Black), contentAlignment = Alignment.Center) {
-            Text(player.exceptionOrNull()?.message ?: "Playback failed", color = Color.White)
-        }
+        val message = player.exceptionOrNull()?.message ?: "Playback failed"
+        LaunchedEffect(message) { onError(message) }
+        Box(modifier.background(Color.Black))
         return
     }
 
     val frame by mpv.frame.collectAsState()
     val error by mpv.error.collectAsState()
+    LaunchedEffect(error) { error?.let(onError) }
     var position by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(0L) }
     var playing by remember { mutableStateOf(true) }
@@ -146,8 +148,6 @@ actual fun VideoPlayer(
                 )
             }
         } ?: if (error == null) CircularProgressIndicator(Modifier.align(Alignment.Center)) else Unit
-
-        error?.let { Text(it, color = Color.White, modifier = Modifier.align(Alignment.Center)) }
 
         AnimatedVisibility(
             controlsVisible || !playing,

@@ -30,6 +30,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -50,7 +52,8 @@ fun PlayerScreen(
     request: PlaybackRequest,
     onBack: () -> Unit,
     onNext: (PlaybackRequest) -> Unit,
-    showBackButton: Boolean = true,
+    /** TV mode: no on-screen back button (the remote has one) and the skip button takes focus. */
+    isTv: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
     val model = remember(request) { PlayerModel(core, request, scope) }
@@ -59,6 +62,7 @@ fun PlayerScreen(
     var duration by remember { mutableLongStateOf(0L) }
     var lastActivity by remember { mutableLongStateOf(0L) }
     var chromeVisible by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(controller) {
         val c = controller ?: return@LaunchedEffect
@@ -98,7 +102,21 @@ fun PlayerScreen(
                 model.onProgress(duration, duration, force = true)
                 scope.launch { model.nextEpisode()?.let(onNext) ?: onBack() }
             },
+            onError = { error = it },
         )
+
+        error?.let { message ->
+            Column(
+                Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = 0.8f)).padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text("Can't play this episode", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                Text(message, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(vertical = 12.dp))
+                val focus = remember { FocusRequester() }
+                LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+                Button(onClick = onBack, modifier = Modifier.focusRequester(focus)) { Text("Back") }
+            }
+        }
 
         AnimatedVisibility(chromeVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopStart)) {
             Row(
@@ -108,7 +126,7 @@ fun PlayerScreen(
                     .padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (showBackButton) {
+                if (!isTv) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
@@ -137,7 +155,9 @@ fun PlayerScreen(
                 Modifier.align(Alignment.BottomEnd).safeDrawingPadding().padding(end = 24.dp, bottom = 96.dp),
                 horizontalArrangement = Arrangement.End,
             ) {
-                Button(onClick = { controller?.seekTo(skip.targetMs) }) { Text(skip.label) }
+                val focus = remember { FocusRequester() }
+                if (isTv) LaunchedEffect(skip.label) { runCatching { focus.requestFocus() } }
+                Button(onClick = { controller?.seekTo(skip.targetMs) }, modifier = Modifier.focusRequester(focus)) { Text(skip.label) }
             }
         }
     }

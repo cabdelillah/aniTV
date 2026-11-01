@@ -8,6 +8,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
 import app.anitv.core.AniTvCore
 import app.anitv.ui.Navigator
+import app.anitv.ui.ProvideImageLoader
 import app.anitv.ui.Screen
 import app.anitv.ui.ScreenModels
 import app.anitv.ui.presentation.DetailsModel
@@ -26,6 +27,7 @@ fun TvApp(core: AniTvCore, navigator: Navigator) {
     val models = remember { ScreenModels(appScope) }
     models.retain(navigator.screens.filterIsInstance<Screen.Details>().map { it.anime.id }.toSet())
 
+    ProvideImageLoader(core)
     AniTvTheme {
         MaterialTheme(
             colorScheme = darkColorScheme(
@@ -59,7 +61,7 @@ fun TvApp(core: AniTvCore, navigator: Navigator) {
                         request = screen.request,
                         onBack = { navigator.pop() },
                         onNext = { navigator.replace(Screen.Player(it)) },
-                        showBackButton = false,
+                        isTv = true,
                     )
                 }
             }

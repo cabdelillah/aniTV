@@ -53,8 +53,6 @@ fun TvHomeScreen(model: HomeModel, onOpen: (Anime) -> Unit, onSearch: () -> Unit
             is Load.Ready -> {
                 val rows = state.value
                 var focused by remember { mutableStateOf(rows.trending.firstOrNull()) }
-                val firstFocus = remember { FocusRequester() }
-                LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
 
                 Backdrop(focused)
                 Column(Modifier.fillMaxSize()) {
@@ -76,7 +74,7 @@ fun TvHomeScreen(model: HomeModel, onOpen: (Anime) -> Unit, onSearch: () -> Unit
                                     continueWatching.map { it.anime },
                                     onOpen,
                                     onFocused = { focused = it },
-                                    firstItemFocus = firstFocus,
+                                    focusFirstItem = true,
                                     progress = { byId[it.id]?.fraction },
                                 )
                             }
@@ -87,7 +85,7 @@ fun TvHomeScreen(model: HomeModel, onOpen: (Anime) -> Unit, onSearch: () -> Unit
                                 rows.trending,
                                 onOpen,
                                 onFocused = { focused = it },
-                                firstItemFocus = if (continueWatching.isEmpty()) firstFocus else null,
+                                focusFirstItem = continueWatching.isEmpty(),
                             )
                         }
                         item(key = "seasonal") { TvRow("Popular this season", rows.seasonal, onOpen, { focused = it }) }
