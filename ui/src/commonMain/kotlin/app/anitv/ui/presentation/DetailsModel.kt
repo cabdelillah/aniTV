@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 class DetailsModel(
     private val core: AniTvCore,
-    initial: Anime,
+    private val initial: Anime,
     private val scope: CoroutineScope,
 ) {
     private val _details = MutableStateFlow(AnimeDetails(initial))
