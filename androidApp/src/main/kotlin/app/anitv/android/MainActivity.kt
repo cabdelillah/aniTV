@@ -1,6 +1,7 @@
 package app.anitv.android
 
 import android.app.UiModeManager
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -50,6 +51,14 @@ class MainActivity : ComponentActivity() {
             val playing = navigator.current is Screen.Player
             val insets = remember { WindowCompat.getInsetsController(window, window.decorView) }
             LaunchedEffect(playing) {
+                // Phones play in landscape; TVs already are.
+                if (!isTv) {
+                    requestedOrientation = if (playing) {
+                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                    } else {
+                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    }
+                }
                 if (playing) {
                     insets.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                     insets.hide(WindowInsetsCompat.Type.systemBars())

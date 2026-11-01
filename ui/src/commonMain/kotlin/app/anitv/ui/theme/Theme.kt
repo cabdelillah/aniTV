@@ -1,13 +1,16 @@
 package app.anitv.ui.theme
 
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 
 object AniTvColors {
     val Accent = Color(0xFFFF4D6D)
     val Background = Color(0xFF0E0E12)
+    val OnBackground = Color(0xFFF2F2F5)
     val Surface = Color(0xFF17171D)
     val SurfaceHigh = Color(0xFF22222A)
     val OnSurfaceMuted = Color(0xFFA0A0AE)
@@ -30,7 +33,11 @@ private val scheme = darkColorScheme(
 
 @Composable
 fun AniTvTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = scheme, content = content)
+    // Screens draw their own backgrounds instead of sitting in a Surface, so set the default
+    // text/icon color explicitly; otherwise it falls back to black.
+    MaterialTheme(colorScheme = scheme) {
+        CompositionLocalProvider(LocalContentColor provides scheme.onBackground, content = content)
+    }
 }
 
 /** Parses AniList's `#rrggbb` colors. */

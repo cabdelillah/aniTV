@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.darkColorScheme
 import app.anitv.core.AniTvCore
@@ -33,36 +35,40 @@ fun TvApp(core: AniTvCore, navigator: Navigator) {
             colorScheme = darkColorScheme(
                 primary = AniTvColors.Accent,
                 background = AniTvColors.Background,
+                onBackground = AniTvColors.OnBackground,
+                onSurface = AniTvColors.OnBackground,
                 surface = AniTvColors.Surface,
                 surfaceVariant = AniTvColors.SurfaceHigh,
                 onSurfaceVariant = AniTvColors.OnSurfaceMuted,
             ),
         ) {
-            when (val screen = navigator.current) {
-                Screen.Home -> TvHomeScreen(
-                    model = home,
-                    onOpen = { navigator.push(Screen.Details(it)) },
-                    onSearch = { navigator.push(Screen.Search) },
-                )
-                Screen.Search -> TvSearchScreen(
-                    model = search,
-                    onOpen = { navigator.push(Screen.Details(it)) },
-                )
-                is Screen.Details -> key(screen.anime.id) {
-                    TvDetailsScreen(
-                        model = models.get(screen.anime.id) { DetailsModel(core, screen.anime, it) },
-                        onPlay = { navigator.push(Screen.Player(it)) },
+            CompositionLocalProvider(LocalContentColor provides AniTvColors.OnBackground) {
+                when (val screen = navigator.current) {
+                    Screen.Home -> TvHomeScreen(
+                        model = home,
+                        onOpen = { navigator.push(Screen.Details(it)) },
+                        onSearch = { navigator.push(Screen.Search) },
+                    )
+                    Screen.Search -> TvSearchScreen(
+                        model = search,
                         onOpen = { navigator.push(Screen.Details(it)) },
                     )
-                }
-                is Screen.Player -> key(screen.request) {
-                    PlayerScreen(
-                        core = core,
-                        request = screen.request,
-                        onBack = { navigator.pop() },
-                        onNext = { navigator.replace(Screen.Player(it)) },
-                        isTv = true,
-                    )
+                    is Screen.Details -> key(screen.anime.id) {
+                        TvDetailsScreen(
+                            model = models.get(screen.anime.id) { DetailsModel(core, screen.anime, it) },
+                            onPlay = { navigator.push(Screen.Player(it)) },
+                            onOpen = { navigator.push(Screen.Details(it)) },
+                        )
+                    }
+                    is Screen.Player -> key(screen.request) {
+                        PlayerScreen(
+                            core = core,
+                            request = screen.request,
+                            onBack = { navigator.pop() },
+                            onNext = { navigator.replace(Screen.Player(it)) },
+                            isTv = true,
+                        )
+                    }
                 }
             }
         }
