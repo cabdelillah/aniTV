@@ -40,6 +40,7 @@ import app.anitv.ui.components.ScoreBadge
 
 internal val TvGutter = 48.dp
 
+@Composable
 internal fun focusBorder() = CardDefaults.border(
     focusedBorder = Border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(10.dp)),
 )

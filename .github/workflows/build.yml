@@ -14,17 +14,17 @@ jobs:
     name: Android & Android TV APK
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Test core
         run: ./gradlew :core:desktopTest
       - name: Build APK
         run: ./gradlew :androidApp:assembleRelease
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: aniTV-android
           path: androidApp/build/outputs/apk/release/*.apk
@@ -33,15 +33,15 @@ jobs:
     name: macOS app
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Build DMG
         run: ./gradlew :desktopApp:packageDmg -PdesktopOnly=true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: aniTV-macos
           path: desktopApp/build/compose/binaries/main/dmg/*.dmg
