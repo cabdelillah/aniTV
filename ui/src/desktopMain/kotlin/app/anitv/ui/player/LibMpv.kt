@@ -69,6 +69,24 @@ internal interface LibMpv : Library {
     }
 }
 
+/**
+ * mpv refuses to start (`mpv_create` returns NULL) unless LC_NUMERIC is "C", and the JVM
+ * sets the process locale from the user's environment, e.g. en_US.UTF-8 on most Macs.
+ */
+internal object CLocale {
+    @Suppress("FunctionName")
+    private interface LibC : Library {
+        fun setlocale(category: Int, locale: String?): String?
+    }
+
+    // LC_NUMERIC is 4 on macOS/BSD and 1 on Linux (glibc).
+    private val lcNumeric = if (System.getProperty("os.name").lowercase().contains("mac")) 4 else 1
+
+    fun forceNumericC() {
+        runCatching { Native.load("c", LibC::class.java).setlocale(lcNumeric, "C") }
+    }
+}
+
 /** Builds a native `mpv_render_param[]`: pairs of `{int type; void *data}`, zero-terminated. */
 internal class RenderParams(vararg params: Pair<Int, Pointer?>) {
     private val entrySize = 2L * Native.POINTER_SIZE

@@ -27,7 +27,10 @@ class MpvUnavailableException : Exception(
  */
 class MpvPlayer(request: PlaybackRequest, private val onEnded: () -> Unit) : PlayerController {
     private val mpv = LibMpv.instance ?: throw MpvUnavailableException()
-    private val handle: Pointer = mpv.mpv_create() ?: throw IllegalStateException("mpv_create failed")
+    private val handle: Pointer = run {
+        CLocale.forceNumericC()
+        mpv.mpv_create() ?: throw IllegalStateException("mpv_create failed")
+    }
     private val renderContext: Pointer
 
     /** A finished frame. [generation] changes on every frame so Compose redraws. */

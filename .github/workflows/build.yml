@@ -99,7 +99,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -dns-server 8.8.8.8,1.1.1.1
           script: scripts/e2e-android.sh phone aniTV.apk e2e
       - uses: actions/upload-artifact@v5
         if: always()
@@ -128,7 +128,7 @@ jobs:
           arch: x86
           profile: tv_1080p
           disable-animations: true
-          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -dns-server 8.8.8.8,1.1.1.1
           script: scripts/e2e-android.sh tv aniTV.apk e2e
       - uses: actions/upload-artifact@v5
         if: always()

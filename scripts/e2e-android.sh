@@ -37,6 +37,12 @@ adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
 adb install -r "$APK" || { echo "install failed"; exit 1; }
 
+# Emulators often come up before their network does; wait until DNS and HTTPS work.
+for i in $(seq 1 60); do
+  adb shell "ping -c 1 -W 2 graphql.anilist.co" >/dev/null 2>&1 && { echo "network up after ${i} tries"; break; }
+  sleep 3
+done
+
 # 1. Self-test: network, AniList, images, AniSkip, source, stream.
 adb logcat -c
 adb shell am start -W -n "$ACTIVITY" --ez selftest true

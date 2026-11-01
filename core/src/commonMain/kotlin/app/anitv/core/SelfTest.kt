@@ -54,8 +54,8 @@ object SelfTest {
             "HTTP ${response.status.value} ${response.headers["Content-Type"]}"
         }
         step("aniskip") {
-            val skip = core.aniSkip.skipTimes(FRIEREN_MAL_ID, 1)
-            "opening=${skip?.opening} ending=${skip?.ending}"
+            val skip = core.aniSkip.skipTimes(FRIEREN_MAL_ID, 1) ?: error("no skip times (AniSkip unreachable?)")
+            "opening=${skip.opening} ending=${skip.ending}"
         }
         step("source episodes + stream") {
             val target = anime ?: error("no anime to resolve")
