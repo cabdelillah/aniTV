@@ -157,6 +157,7 @@ jobs:
         run: |
           ls -la e2e
           gh release delete ci-diagnostics --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          find e2e -type f -size 0 -delete
           gh release create ci-diagnostics e2e/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --prerelease --title "CI diagnostics" \
             --notes "Screenshots, self-test output and logs from the device tests of ${GITHUB_SHA::7}. Not an app release."

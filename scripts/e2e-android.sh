@@ -13,10 +13,12 @@ key() { adb shell input keyevent "$@"; sleep 1; }
 
 # Taps the center of the first UI node whose text or content-description matches a regex.
 tap() {
-  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
-  adb pull /sdcard/ui.xml "$OUT/ui.xml" >/dev/null 2>&1
-  local xy
-  xy=$(python3 - "$OUT/ui.xml" "$1" <<'PY'
+  local xy="" try
+  for try in 1 2 3; do
+    adb shell rm -f /sdcard/ui.xml
+    adb shell uiautomator dump --compressed /sdcard/ui.xml 2>&1 | tail -1
+    adb pull /sdcard/ui.xml "$OUT/ui.xml" >/dev/null 2>&1 || { sleep 2; continue; }
+    xy=$(python3 - "$OUT/ui.xml" "$1" <<'PY'
 import re, sys, xml.etree.ElementTree as ET
 pattern = re.compile(sys.argv[2])
 for node in ET.parse(sys.argv[1]).iter("node"):
@@ -27,7 +29,14 @@ for node in ET.parse(sys.argv[1]).iter("node"):
         break
 PY
 )
-  if [ -z "$xy" ]; then echo "tap: nothing matches '$1'"; return 1; fi
+    [ -n "$xy" ] && break
+    sleep 2
+  done
+  if [ -z "$xy" ]; then
+    echo "tap: nothing matches '$1'; visible labels:"
+    grep -o 'text="[^"]\+"\|content-desc="[^"]\+"' "$OUT/ui.xml" 2>/dev/null | head -30
+    return 1
+  fi
   echo "tap '$1' at $xy"; adb shell input tap $xy; sleep 1
 }
 
@@ -38,7 +47,7 @@ adb shell settings put global animator_duration_scale 0
 adb install -r "$APK" || { echo "install failed"; exit 1; }
 
 # Emulators often come up before their network does; wait until DNS and HTTPS work.
-for i in $(seq 1 60); do
+for i in $(seq 1 20); do
   adb shell "ping -c 1 -W 2 graphql.anilist.co" >/dev/null 2>&1 && { echo "network up after ${i} tries"; break; }
   sleep 3
 done
